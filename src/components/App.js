@@ -9,6 +9,13 @@ import AddPlacePopup from "./AddPlacePopup";
 import ImagePopup from "./ImagePopup";
 import api from "../utils/Api";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
+import { Route, Switch, Link } from 'react-router-dom';
+import Register from "./Register";
+import Login from "./Login";
+import ProtectedRoute from "./ProtectedRoute";
+import InfoTooltip from "./InfoTooltip";
+import tickIcoPath from "../images/tick_ico.svg";
+import crossIcoPath from "../images/cross_ico.svg";
 
 function App() {
 
@@ -18,6 +25,7 @@ function App() {
   const [selectedCard, setSelectedCard] = React.useState({});
   const [currentUser, setCurrentUser] = React.useState({name:'', about:'', avatar:'', _id: ''})
   const [cards, setCards] = React.useState([]);
+  const [loggedIn, setLoggedIn] = React.useState(false);
 
   const handleEditProfileClick = () => {
     setIsEditProfilePopupOpen(true);
@@ -124,11 +132,36 @@ function App() {
       <div className="App">
         <div className="page">
           <div className="page__content">
-            <Header />
-            <Main onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} 
-                  onCardClick={handleCardClick} cards={cards} onCardLike={handleCardLike} onCardDelete={handleCardDelete} />
+            <Switch>
+              <ProtectedRoute exact path='/' >
+                <Header>
+                  <div className="header__account-info">
+                    <p className="header__account-email">какой-то email</p>
+                    <Link to="/sign-in" className="header__link">Выйти</Link>
+                  </div>
+                </Header>
+                <Main onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} 
+                      onCardClick={handleCardClick} cards={cards} onCardLike={handleCardLike} onCardDelete={handleCardDelete} />
+              </ProtectedRoute>
+
+              <Route path='/sign-up'>
+                <Header>
+                  <Link to="/sign-in" className="header__link">Войти</Link>
+                </Header>
+                <Register />
+              </Route>
+
+              <Route path='/sign-in'>
+                <Header>
+                  <Link to="/sign-up" className="header__link">Регистрация</Link>
+                </Header>
+                <Login />
+              </Route>
+            </Switch>
             <Footer />
           </div>
+
+          
 
           <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />
 
@@ -139,6 +172,16 @@ function App() {
           <PopupWithForm name="delete-card" title="Вы уверены?" onClose={closeAllPopups} buttonTitle="Да" />
         
           <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+
+          <InfoTooltip>
+            <img className="popup__ico" src={tickIcoPath} />
+            <h2 className="popup__info-title">Вы успешно зарегистрировались!</h2>
+          </InfoTooltip>
+
+          <InfoTooltip>
+            <img className="popup__ico" src={crossIcoPath} />
+            <h2 className="popup__info-title">Что-то пошло не так! Попробуйте ещё раз.</h2>
+          </InfoTooltip>
         </div>
       </div>
     </CurrentUserContext.Provider>
