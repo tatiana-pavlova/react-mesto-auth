@@ -1,12 +1,10 @@
 import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import * as auth from './auth';
+import { Link } from 'react-router-dom';
 
-
-function Register (props) {
+function Register ({onRegister}) {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const history = useHistory();
+  
 
   function resetForm () {
     setEmail('');
@@ -23,12 +21,7 @@ function Register (props) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    auth.register(password, email).then ((res) => {
-      !res || res.status === 400 ? props.onInfoTooltipFail() : props.onInfoTooltipSuccess();
-      if (res) {
-        history.push('/sign-in');
-      } 
-    }) 
+    onRegister({password, email})
       .catch((err) => console.log(err))
       .finally (() => {
         resetForm();

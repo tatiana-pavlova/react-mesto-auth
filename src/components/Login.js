@@ -1,12 +1,9 @@
 import React from "react";
-import { useHistory } from "react-router";
-import * as auth from './auth';
 
-function Login (props) {
+function Login ({onLogin}) {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const history = useHistory();
-
+  
   const resetForm = () => {
     setEmail('');
     setPassword('');
@@ -26,16 +23,11 @@ function Login (props) {
       return;
     }
 
-    auth.authorize(password, email).then ((data) => {
-      if (data.token) {
-        props.handleLogin();
-        history.push('/');
-      }
-    })
-    .catch(err => console.log(err))
-    .finally (() => {
-      resetForm();
-    });
+    onLogin({password, email})
+      .catch((err) => console.log(err))
+      .finally (() => {
+        resetForm();
+      });
   }
 
   return (

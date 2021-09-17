@@ -29,7 +29,7 @@ function App() {
   const [loggedIn, setLoggedIn] = React.useState(false);
   const [isInfoTooltipSuccess, setIsInfoTooltipSuccess] = React.useState(false);
   const [isInfoTooltipFail, setIsInfoTooltipFail] = React.useState(false);
-  const [userData, setUserData] = React.useState({});
+  const [email, setEmail] = React.useState('');
   const history = useHistory();
 
   const handleEditProfileClick = () => {
@@ -84,7 +84,7 @@ function App() {
     if(jwt) {
       auth.getContent(jwt).then((res) => {
         if(res) {
-          setUserData({email: res.data.email});
+          setEmail(res.data.email);
           setLoggedIn(true);
           history.push('/');
         }
@@ -93,7 +93,34 @@ function App() {
     }
   },[history])
 
-  
+  const onRegister = ({password, email}) => {
+    return auth.register(password, email).then ((res) => {
+             !res || res.status === 400 ? handleInfoTooltipFail() : handleInfoTooltipSuccess();
+             if (res) {
+               history.push('/sign-in');
+             } 
+           })
+  }
+
+  const onLogin = ({password, email}) => {
+    return auth.authorize(password, email).then ((data) => {
+             if (data.token) {
+               handleLogin();
+               history.push('/');
+             }
+           })
+  }
+
+  const onSignOut = () => {
+    localStorage.removeItem('jwt');
+    setLoggedIn(false);
+    history.push('/sign-in');
+  }
+
+  function handleLogin() {
+    setLoggedIn(true);
+  }
+
   function handleCardLike(card) {
     const isLiked = card.likes.some(i => i._id === currentUser._id);
     
@@ -158,33 +185,23 @@ function App() {
       });
   }
 
-  function handleLogin() {
-    setLoggedIn(true);
-  }
-
   
-  function signOut () {
-    localStorage.removeItem('jwt');
-    setLoggedIn(false);
-    history.push('/sign-in');
-  }
-
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="App">
         <div className="page">
           <div className="page__content">
-            <Header email={userData.email} signOut={signOut} />
+            <Header email={email} onSignOut={onSignOut} />
             <Switch>
               <ProtectedRoute exact path="/" loggedIn={loggedIn} component={Main} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} 
                       onCardClick={handleCardClick} cards={cards} onCardLike={handleCardLike} onCardDelete={handleCardDelete} />
               
               <Route path='/sign-up'>
-                <Register onInfoTooltipSuccess={handleInfoTooltipSuccess} onInfoTooltipFail={handleInfoTooltipFail} />
+                <Register onRegister={onRegister} />
               </Route>
 
               <Route path='/sign-in'>
-                <Login handleLogin={handleLogin} onInfoTooltipFail={handleInfoTooltipFail} />
+                <Login onLogin={onLogin} />
               </Route>
 
               <Route >
@@ -193,8 +210,6 @@ function App() {
             </Switch>
             <Footer />
           </div>
-
-          
 
           <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />
 
