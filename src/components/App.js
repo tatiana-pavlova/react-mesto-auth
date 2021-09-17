@@ -9,13 +9,14 @@ import AddPlacePopup from "./AddPlacePopup";
 import ImagePopup from "./ImagePopup";
 import api from "../utils/Api";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
-import { Route, Switch, Link } from 'react-router-dom';
+import { Route, Switch, Redirect, useHistory } from 'react-router-dom';
 import Register from "./Register";
 import Login from "./Login";
 import ProtectedRoute from "./ProtectedRoute";
 import InfoTooltip from "./InfoTooltip";
 import tickIcoPath from "../images/tick_ico.svg";
 import crossIcoPath from "../images/cross_ico.svg";
+import * as auth from "./auth";
 
 function App() {
 
@@ -26,6 +27,10 @@ function App() {
   const [currentUser, setCurrentUser] = React.useState({name:'', about:'', avatar:'', _id: ''})
   const [cards, setCards] = React.useState([]);
   const [loggedIn, setLoggedIn] = React.useState(false);
+  const [isInfoTooltipSuccess, setIsInfoTooltipSuccess] = React.useState(false);
+  const [isInfoTooltipFail, setIsInfoTooltipFail] = React.useState(false);
+  const [userData, setUserData] = React.useState({});
+  const history = useHistory();
 
   const handleEditProfileClick = () => {
     setIsEditProfilePopupOpen(true);
@@ -38,6 +43,15 @@ function App() {
   const handleAddPlaceClick = () => {
     setIsAddPlacePopupOpen(true);
   }
+
+  const handleInfoTooltipSuccess = () => {
+    setIsInfoTooltipSuccess(true);
+  }
+
+  const handleInfoTooltipFail = () => {
+    setIsInfoTooltipFail(true);
+  }
+
 
   const handleCardClick = (card) => {
     setSelectedCard(card);
@@ -63,6 +77,21 @@ function App() {
         console.log(err);
       });
   }, [])
+
+  React.useEffect(() => {
+    const jwt = localStorage.getItem('jwt');
+    
+    if(jwt) {
+      auth.getContent(jwt).then((res) => {
+        if(res) {
+          setUserData({email: res.data.email});
+          setLoggedIn(true);
+          history.push('/');
+        }
+      })
+      .catch(err => console.log(err));
+    }
+  },[history])
 
   
   function handleCardLike(card) {
@@ -91,6 +120,8 @@ function App() {
     setIsEditProfilePopupOpen(false);
     setIsEditAvatarPopupOpen(false);
     setIsAddPlacePopupOpen(false);
+    setIsInfoTooltipSuccess(false);
+    setIsInfoTooltipFail(false);
     setSelectedCard({});
   }
 
@@ -127,35 +158,37 @@ function App() {
       });
   }
 
+  function handleLogin() {
+    setLoggedIn(true);
+  }
+
+  
+  function signOut () {
+    localStorage.removeItem('jwt');
+    setLoggedIn(false);
+    history.push('/sign-in');
+  }
+
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="App">
         <div className="page">
           <div className="page__content">
+            <Header email={userData.email} signOut={signOut} />
             <Switch>
-              <ProtectedRoute exact path='/' >
-                <Header>
-                  <div className="header__account-info">
-                    <p className="header__account-email">какой-то email</p>
-                    <Link to="/sign-in" className="header__link">Выйти</Link>
-                  </div>
-                </Header>
-                <Main onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} 
+              <ProtectedRoute exact path="/" loggedIn={loggedIn} component={Main} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} 
                       onCardClick={handleCardClick} cards={cards} onCardLike={handleCardLike} onCardDelete={handleCardDelete} />
-              </ProtectedRoute>
-
+              
               <Route path='/sign-up'>
-                <Header>
-                  <Link to="/sign-in" className="header__link">Войти</Link>
-                </Header>
-                <Register />
+                <Register onInfoTooltipSuccess={handleInfoTooltipSuccess} onInfoTooltipFail={handleInfoTooltipFail} />
               </Route>
 
               <Route path='/sign-in'>
-                <Header>
-                  <Link to="/sign-up" className="header__link">Регистрация</Link>
-                </Header>
-                <Login />
+                <Login handleLogin={handleLogin} onInfoTooltipFail={handleInfoTooltipFail} />
+              </Route>
+
+              <Route >
+                {loggedIn? <Redirect to="/" /> : <Redirect to="/sign-in" />}
               </Route>
             </Switch>
             <Footer />
@@ -173,13 +206,13 @@ function App() {
         
           <ImagePopup card={selectedCard} onClose={closeAllPopups} />
 
-          <InfoTooltip>
-            <img className="popup__ico" src={tickIcoPath} />
+          <InfoTooltip isOpen={isInfoTooltipSuccess} onClose={closeAllPopups}>
+            <img className="popup__ico" src={tickIcoPath} alt="tick" />
             <h2 className="popup__info-title">Вы успешно зарегистрировались!</h2>
           </InfoTooltip>
 
-          <InfoTooltip>
-            <img className="popup__ico" src={crossIcoPath} />
+          <InfoTooltip isOpen={isInfoTooltipFail} onClose={closeAllPopups}>
+            <img className="popup__ico" src={crossIcoPath} alt="cross" />
             <h2 className="popup__info-title">Что-то пошло не так! Попробуйте ещё раз.</h2>
           </InfoTooltip>
         </div>
