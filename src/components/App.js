@@ -16,7 +16,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import InfoTooltip from "./InfoTooltip";
 import tickIcoPath from "../images/tick_ico.svg";
 import crossIcoPath from "../images/cross_ico.svg";
-import * as auth from "./auth";
+import * as auth from "../utils/auth";
 
 function App() {
 
@@ -27,8 +27,9 @@ function App() {
   const [currentUser, setCurrentUser] = React.useState({name:'', about:'', avatar:'', _id: ''})
   const [cards, setCards] = React.useState([]);
   const [loggedIn, setLoggedIn] = React.useState(false);
-  const [isInfoTooltipSuccess, setIsInfoTooltipSuccess] = React.useState(false);
-  const [isInfoTooltipFail, setIsInfoTooltipFail] = React.useState(false);
+  const [isInfoTooltipOpen, setIsInfoTooltipOpen] = React.useState(false);
+  const [infoTooltipIcoPath, setInfoTooltipIcoPath] = React.useState('');
+  const [infoTooltipTitle, setInfoTooltipTitle] = React.useState('');
   const [email, setEmail] = React.useState('');
   const history = useHistory();
 
@@ -45,11 +46,15 @@ function App() {
   }
 
   const handleInfoTooltipSuccess = () => {
-    setIsInfoTooltipSuccess(true);
+    setIsInfoTooltipOpen(true);
+    setInfoTooltipIcoPath(tickIcoPath);
+    setInfoTooltipTitle('Вы успешно зарегистрировались!')
   }
 
   const handleInfoTooltipFail = () => {
-    setIsInfoTooltipFail(true);
+    setIsInfoTooltipOpen(true);
+    setInfoTooltipIcoPath(crossIcoPath);
+    setInfoTooltipTitle('Что-то пошло не так! Попробуйте ещё раз.')
   }
 
 
@@ -147,10 +152,21 @@ function App() {
     setIsEditProfilePopupOpen(false);
     setIsEditAvatarPopupOpen(false);
     setIsAddPlacePopupOpen(false);
-    setIsInfoTooltipSuccess(false);
-    setIsInfoTooltipFail(false);
+    setIsInfoTooltipOpen(false);
     setSelectedCard({});
   }
+
+  React.useEffect(() => {
+    const closeByEscape = (e) => {
+      if (e.key === 'Escape') {
+        closeAllPopups();
+      }
+    }
+
+    document.addEventListener('keydown', closeByEscape)
+    
+    return () => document.removeEventListener('keydown', closeByEscape)
+  }, [])
 
   function handleUpdateUser(data) {
     api.editProfileInfo(data)
@@ -221,15 +237,8 @@ function App() {
         
           <ImagePopup card={selectedCard} onClose={closeAllPopups} />
 
-          <InfoTooltip isOpen={isInfoTooltipSuccess} onClose={closeAllPopups}>
-            <img className="popup__ico" src={tickIcoPath} alt="tick" />
-            <h2 className="popup__info-title">Вы успешно зарегистрировались!</h2>
-          </InfoTooltip>
-
-          <InfoTooltip isOpen={isInfoTooltipFail} onClose={closeAllPopups}>
-            <img className="popup__ico" src={crossIcoPath} alt="cross" />
-            <h2 className="popup__info-title">Что-то пошло не так! Попробуйте ещё раз.</h2>
-          </InfoTooltip>
+          <InfoTooltip isOpen={isInfoTooltipOpen} onClose={closeAllPopups} icoPath={infoTooltipIcoPath} title={infoTooltipTitle} />
+            
         </div>
       </div>
     </CurrentUserContext.Provider>

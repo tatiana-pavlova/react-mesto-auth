@@ -24,10 +24,8 @@ function Login ({onLogin}) {
     }
 
     onLogin({password, email})
+      .then (() => resetForm())
       .catch((err) => console.log(err))
-      .finally (() => {
-        resetForm();
-      });
   }
 
   return (

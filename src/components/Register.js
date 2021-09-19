@@ -22,10 +22,8 @@ function Register ({onRegister}) {
   function handleSubmit(e) {
     e.preventDefault();
     onRegister({password, email})
+      .then (() => resetForm())
       .catch((err) => console.log(err))
-      .finally (() => {
-        resetForm();
-      })
   }
 
   return (
