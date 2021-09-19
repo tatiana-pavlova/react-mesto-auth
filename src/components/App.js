@@ -100,11 +100,14 @@ function App() {
 
   const onRegister = ({password, email}) => {
     return auth.register(password, email).then ((res) => {
-             !res || res.status === 400 ? handleInfoTooltipFail() : handleInfoTooltipSuccess();
-             if (res) {
-               history.push('/sign-in');
-             } 
-           })
+      if (res) {
+        handleInfoTooltipSuccess();
+        history.push('/sign-in');
+      } 
+    })
+    .catch (() => {
+      handleInfoTooltipFail();
+    })
   }
 
   const onLogin = ({password, email}) => {
