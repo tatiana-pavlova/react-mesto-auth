@@ -112,11 +112,11 @@ function App() {
 
   const onLogin = ({password, email}) => {
     return auth.authorize(password, email).then ((data) => {
-             if (data.token) {
-               handleLogin();
-               history.push('/');
-             }
-           })
+      if (data.token) {
+        handleLogin();
+        history.push('/');
+      }
+    })
   }
 
   const onSignOut = () => {
